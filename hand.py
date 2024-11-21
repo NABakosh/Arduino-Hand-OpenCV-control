@@ -8,6 +8,7 @@ hands = mpHands.Hands()
 mpDraw = mp.solutions.drawing_utils
 
 portNo = "COM3"
+uart = serial.Serial(portNo, 9600)
 
 p = [0 for i in range(21)]
 finger = [0 for i in range(10)]
@@ -26,7 +27,6 @@ while True:
 
             for id, point in enumerate(handLms.landmark):
                 width, height, color = img.shape
-                print(handLms.landmark)
                 width, height = int(point.x * height), int(point.y * width)
                 p[id] = height
 
@@ -52,62 +52,13 @@ while True:
             finger[4] = 1 if distance(p[0], p[20]) > distanceGood else 0
             finger[0] = 1 if distance(p[4], p[17]) > distanceGood else 0
 
-            msg = ''
-            #закрыть
-            if not (finger[0]) and not finger[1] and not finger[2] and not (finger[3]) and not (finger[4]):
-                msg = '@' + str(width) + ';'
-            #только указательный
-            if not (finger[0]) and  finger[1] and not finger[2] and not(finger[3]) and not(finger[4]):
-                msg = '!' + str(width) + ';'
-            #указательный с средний
-            if not (finger[0]) and  finger[1] and  finger[2] and not(finger[3]) and not(finger[4]):
-                msg = '#' + str(width) + ';'
-            #указательный, средний и безьимянный
-            if not (finger[0]) and  finger[1] and  finger[2] and (finger[3]) and not(finger[4]):
-                msg = '%' + str(width) + ';'
-            #указатьельный,средний,безьимянный,мезинец
-            if not (finger[0]) and  finger[1] and  finger[2] and (finger[3]) and (finger[4]):
-                msg = ':' + str(width) + ';'
-            #указательный с безьимяным и мезинцем
-            if not (finger[0]) and  finger[1] and  not finger[2] and (finger[3]) and (finger[4]):
-                msg = '?' + str(width) + ';'
-            #указательный средним с мезинцем
-            if not (finger[0]) and  finger[1] and  finger[2] and not(finger[3]) and (finger[4]):
-                msg = '*' + str(width) + ';'
-            #koza
-            if not (finger[0]) and  finger[1] and  not finger[2] and not(finger[3]) and (finger[4]):
-                msg = '(' + str(width) + ';'
-            #указательный с безьимянным
-            if not (finger[0]) and  finger[1] and  not finger[2] and (finger[3]) and not (finger[4]):
-                msg = ')' + str(width) + ';'
-            #средний
-            if not (finger[0]) and  not finger[1] and  finger[2] and not(finger[3]) and not(finger[4]):
-                msg = 'q' + str(width) + ';'
-            #средний с безьимянный
-            if not (finger[0]) and not finger[1] and  finger[2] and (finger[3]) and not(finger[4]):
-                msg = 'w' + str(width) + ';'
-            #средний с мезинцем
-            if not (finger[0]) and not finger[1] and  finger[2] and not(finger[3]) and (finger[4]):
-                msg = 'e' + str(width) + ';'
-            #средний с безьимянный с мезинцем
-            if not (finger[0]) and not finger[1] and  finger[2] and (finger[3]) and (finger[4]):
-                msg = 'r' + str(width) + ';'
-            #безьяимянный
-            if not (finger[0]) and not finger[1] and not finger[2] and (finger[3]) and not(finger[4]):
-                msg = 't' + str(width) + ';'
-            #безьимянный с мезинцем
-            if not (finger[0]) and not finger[1] and not finger[2] and (finger[3]) and (finger[4]):
-                msg = 'y' + str(width) + ';'
-            #мезинец
-            if not (finger[0]) and not finger[1] and not finger[2] and not(finger[3]) and (finger[4]):
-                msg = 'u' + str(width) + ';'
-
-
-
-            if msg != '':
-                msg = bytes(str(msg), 'utf-8')
-                print(msg)
-
+            msg = [0, 0, 0, 0, 0]
+            for i in range(0, 5):
+                if finger[i]:  # Проверка на значение в списке finger[i]
+                    msg[i] = 1
+            if msg != [0,0,0,0,0]:
+                message = ','.join(map(str, msg))  # Преобразуем массив в строку "1,0,1,1,0"
+                portNo.write((message + '\n').encode())
     cv2.imshow("Image", img)
     if cv2.waitKey(1) == ord('q'):
         break
